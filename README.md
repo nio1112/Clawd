@@ -39,8 +39,8 @@ OpenClaw 是一个运行在本地的 AI 助手平台，支持通过 WhatsApp、T
 
 ```bash
 # 1. 克隆项目到本地
-git clone https://github.com/nio1112/openclaw.git
-cd openclaw
+git clone https://github.com/nio1112/Clawd.git
+cd Clawd
 
 # 2. 一键安装所有推荐 Skills（PowerShell）
 .\scripts\install-skills.ps1
