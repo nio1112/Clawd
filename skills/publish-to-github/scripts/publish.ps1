@@ -297,18 +297,24 @@ else {
 # --- Step 3: 提交代码 ---
 Write-Step "3/6" "提交代码"
 
-git add --all 2>&1 | Out-Null
+# 临时关闭严格错误模式（git 命令的 stderr 输出会被误解为错误）
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
+git add --all 2>$null
 $status = git status --porcelain
 
 if ($status) {
     $changedCount = ($status | Measure-Object).Count
-    Write-Info "发现 $changedCount 个变更文件"
-    git commit -m "$CommitMessage" 2>&1 | Out-Null
-    Write-OK "代码已提交: $CommitMessage"
+    Write-Info "Found $changedCount changed files"
+    git commit -m "$CommitMessage" 2>$null
+    Write-OK "Committed: $CommitMessage"
 }
 else {
-    Write-Warn "没有新的变更需要提交（工作区干净）"
+    Write-Warn "Nothing to commit (clean working tree)"
 }
+
+$ErrorActionPreference = $prevEAP
 
 # --- Step 4: 配置远程仓库 ---
 Write-Step "4/6" "配置远程仓库"
@@ -413,43 +419,41 @@ elseif (-not [string]::IsNullOrWhiteSpace($Topics) -and $null -eq $credential) {
     }
 }
 
-# --- Step 6: 推送 ---
-Write-Step "6/6" "推送代码"
+# --- Step 6: Push ---
+Write-Step "6/6" "Push to remote"
+
+# 临时关闭严格错误模式（git push 的 stderr 进度输出会导致 PS5.1 误报错误）
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 
 # 确保分支名正确
-git branch -M $Branch 2>&1 | Out-Null
+git branch -M $Branch 2>$null
 
 if ($ForcePush) {
-    Write-Warn "强制推送模式..."
-    $pushResult = git push -f -u origin $Branch 2>&1
+    Write-Warn "Force push mode..."
+    git push -f -u origin $Branch 2>$null
 }
 else {
-    $pushResult = git push -u origin $Branch 2>&1
+    git push -u origin $Branch 2>$null
 }
 
 $pushExitCode = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
 
 if ($pushExitCode -eq 0) {
-    Write-OK "代码推送成功!"
+    Write-OK "Push successful!"
 }
 else {
-    # 检查是否是因为远程有内容的问题
-    $pushStr = $pushResult -join " "
-    if ($pushStr -match "rejected.*non-fast-forward" -or $pushStr -match "failed to push") {
-        Write-Warn "推送被拒绝（远程有不同的提交历史）"
-        Write-Info "尝试使用 -ForcePush 参数强制推送（仅限新仓库）"
-        Write-Info "或先执行 git pull --rebase origin $Branch 后再推送"
-    }
-    else {
-        Write-Err "推送失败: $pushStr"
-    }
+    Write-Warn "Push may have failed (exit code: $pushExitCode)"
+    Write-Info "Try: -ForcePush (for new repos only)"
+    Write-Info "Or:  git pull --rebase origin $Branch"
     exit 1
 }
 
-# --- 完成 ---
+# --- Done ---
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
-Write-Host "  发布成功!" -ForegroundColor Green
+Write-Host "  Publish complete!" -ForegroundColor Green
 if ($cloneUrl -match "github\.com[/:]([^/]+)/([^/.]+)") {
     $repoUrl = "https://github.com/$($Matches[1])/$($Matches[2])"
     Write-Host "  $repoUrl" -ForegroundColor White
