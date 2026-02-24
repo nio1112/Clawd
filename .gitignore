@@ -1,0 +1,44 @@
+# OpenClaw Workspace .gitignore
+
+# === 系统文件 ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === Node.js ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === OpenClaw 内部状态 ===
+.openclaw/
+.clawhub/
+
+# === 敏感信息 ===
+# 不要提交包含 API Key 或 Secret 的文件
+*.secret
+*.env
+.env.local
+
+# === 临时文件 ===
+temp/
+tmp/
+*.tmp
+*.bak
+
+# === 日志 ===
+logs/
+*.log
+
+# === 编辑器缓存 ===
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# === 个人记忆文件（按需取消注释来保留隐私） ===
+# 如果想保留记忆隐私，取消下面的注释
+# memory/
+# MEMORY.md
